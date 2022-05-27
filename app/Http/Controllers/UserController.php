@@ -90,7 +90,7 @@ class UserController extends Controller
             $result['error'] = 'Arquivo não suportado.';
             return $this->sendResponse($result,400);
         }
-        $filename = md5(time().rand(0,9999)).'jpg';
+        $filename = md5(time().rand(0,9999)).'.jpg';
         $destPath = public_path('/media/avatars');
 
         $img = Image::make($image->path())
@@ -122,7 +122,7 @@ class UserController extends Controller
             $result['error'] = 'Arquivo não suportado.';
             return $this->sendResponse($result,400);
         }
-        $filename = md5(time().rand(0,9999)).'jpg';
+        $filename = md5(time().rand(0,9999)).'.jpg';
         $destPath = public_path('/media/covers');
 
         $img = Image::make($image->path())
