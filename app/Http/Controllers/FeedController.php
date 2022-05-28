@@ -85,12 +85,12 @@ class FeedController extends Controller
         // recuperar usuários que o usuario logado segue (incluindo o mesmo)
 
         $users = [];
-        $userList = UserRelation::where('user_from', $this->loggedUser['id'])->get(); // o proprio usuario
+        $userList = UserRelation::where('user_from', $this->loggedUser['id'])->get(); //usuários seguidos
 
         foreach ($userList as $userItem) {
             $users[] = $userItem['user_to']; // ids dos usuários que o usuario logado segue
-            $users[] = $this->loggedUser['id'];
         }
+        $users[] = $this->loggedUser['id']; // id do próprio usuário
 
         // recuperar posts ordenados pela data de criação (desc)
 
@@ -110,6 +110,63 @@ class FeedController extends Controller
         $result['pageCount'] = $pageCount;
         $result['currentPage'] = $page;
         return $this->sendResponse($result, 200);
+    }
+
+    public function userFeed(Request $request, $id= false){
+        $result = ['error'=>''];
+
+        if(!$id){
+            $id = $this->loggedUser['id'];
+        }
+
+        $page = intval($request->input('page'));
+        $perPage = 2;
+
+        $postList = Post::where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->offset($page * $perPage)
+            ->limit($perPage)
+            ->get();
+        $total = Post::where('user_id', $id)->count();
+        $pageCount = ceil($total / $perPage);
+
+        $result['posts'] = $this->postListToObject($postList, $id);
+        $result['pageCount'] = $pageCount;
+        $result['currentPage'] = $page;
+
+        return $this->sendResponse($result,200);
+    }
+
+    public function userPhotos(Request $request, $id=false){
+        $result = ['error'=>''];
+
+        if(!$id){
+            $id = $this->loggedUser['id'];
+        }
+
+        $page = intval($request->input('page'));
+        $perPage = 2;
+
+        $postList = Post::where('user_id', $id)
+            ->where('type','photo')
+            ->orderBy('created_at', 'desc')
+            ->offset($page * $perPage)
+            ->limit($perPage)
+            ->get();
+        $total = Post::where('user_id', $id)
+            ->where('type','photo')
+            ->count();
+        $pageCount = ceil($total / $perPage);
+
+        $posts = $this->postListToObject($postList, $id);
+        foreach ($posts as $post ){
+            $post['body'] =url('media/uploads/'. $post['body']);
+        }
+        $result['posts'] = $posts;
+        $result['pageCount'] = $pageCount;
+        $result['currentPage'] = $page;
+
+        return $this->sendResponse($result,200);
     }
 
     protected  function postListToObject($postList, $loggedId)
